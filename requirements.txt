@@ -1,0 +1,6 @@
+numpy
+scipy
+Pillow
+soundfile
+requests
+websocket-client
