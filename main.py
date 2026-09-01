@@ -9,6 +9,7 @@ from pathlib import Path
 from frequencies import STATIONS, ALL_FREQS
 from wefax_decoder import decode_wefax_wav
 
+
 class FaxSpotterApp(tk.Tk):
     def __init__(self):
         super().__init__()
@@ -16,8 +17,8 @@ class FaxSpotterApp(tk.Tk):
         self.geometry("980x720")
         self.minsize(800, 600)
 
-        self.current_image = None        
-        self.photo = None               
+        self.current_image = None
+        self.photo = None
         self.listening = False
         self.scan_thread = None
         self.stop_event = threading.Event()
@@ -30,12 +31,13 @@ class FaxSpotterApp(tk.Tk):
         top.pack(fill=tk.X)
 
         ttk.Label(top, text="KiwiSDR host:").pack(side=tk.LEFT)
-        self.host_var = tk.StringVar(value="kiwisdr.example.com")
+        self.host_var = tk.StringVar(value="pb8w.proxy.kiwisdr.com:8073")
         ttk.Entry(top, textvariable=self.host_var, width=28).pack(side=tk.LEFT, padx=4)
 
         ttk.Label(top, text="Port:").pack(side=tk.LEFT)
         self.port_var = tk.StringVar(value="8073")
         ttk.Entry(top, textvariable=self.port_var, width=6).pack(side=tk.LEFT, padx=4)
+
         btn_frame = ttk.Frame(self, padding=6)
         btn_frame.pack(fill=tk.X)
 
@@ -49,16 +51,20 @@ class FaxSpotterApp(tk.Tk):
         ttk.Button(btn_frame, text="Clear Output", command=self._clear_image).pack(side=tk.LEFT, padx=3)
         ttk.Button(btn_frame, text="Download Current Output", command=self.download_image).pack(side=tk.LEFT, padx=3)
         ttk.Button(btn_frame, text="Test Audio File", command=self.test_audio_file).pack(side=tk.LEFT, padx=3)
+
         self.status_var = tk.StringVar(value="Ready")
         ttk.Label(self, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W).pack(fill=tk.X, side=tk.BOTTOM)
+
         main = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         main.pack(fill=tk.BOTH, expand=True, padx=6, pady=6)
+
         left = ttk.Frame(main)
         main.add(left, weight=3)
 
         self.canvas = tk.Canvas(left, bg="#1a1a1a", highlightthickness=1, highlightbackground="#555")
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.canvas.bind("<Configure>", self._on_canvas_resize)
+
         right = ttk.Frame(main)
         main.add(right, weight=1)
 
@@ -74,6 +80,7 @@ class FaxSpotterApp(tk.Tk):
             parent = self.tree.insert("", "end", text=station, open=False)
             for f, mode in freqs:
                 self.tree.insert(parent, "end", text=f"{f} {mode}", values=(f,))
+
     def _clear_image(self):
         self.current_image = None
         self.photo = None
@@ -109,8 +116,8 @@ class FaxSpotterApp(tk.Tk):
         if path:
             self.current_image.save(path)
             self.status_var.set(f"Saved → {path}")
+
     def test_audio_file(self):
-        """User supplies a local WAV or a URL; we decode it immediately."""
         path = filedialog.askopenfilename(
             title="Select WeFAX audio file",
             filetypes=[("WAV files", "*.wav"), ("All files", "*.*")]
@@ -119,7 +126,8 @@ class FaxSpotterApp(tk.Tk):
             url = simpledialog.askstring("Test Audio", "Or paste a direct WAV URL:")
             if not url:
                 return
-            import requests, tempfile
+            import requests
+            import tempfile
             try:
                 r = requests.get(url, timeout=30)
                 r.raise_for_status()
@@ -146,7 +154,7 @@ class FaxSpotterApp(tk.Tk):
         threading.Thread(target=worker, daemon=True).start()
 
     def start_listening(self):
-    host = self.host_var.get().strip()
+        host = self.host_var.get().strip()
         if not host:
             messagebox.showwarning("Missing host", "Enter a KiwiSDR hostname first.")
             return
@@ -154,6 +162,7 @@ class FaxSpotterApp(tk.Tk):
         self.btn_start.config(state=tk.DISABLED)
         self.btn_stop.config(state=tk.NORMAL)
         self.status_var.set(f"Listening on {host}… (connect kiwiclient for live decode)")
+
     def stop_listening(self):
         self.listening = False
         self.stop_event.set()
@@ -181,8 +190,10 @@ class FaxSpotterApp(tk.Tk):
             self.after(0, lambda f=freq, s=station: self.status_var.set(
                 f"Scanning {s} @ {f} kHz…"))
             import time
-            time.sleep(1.2)        
+            time.sleep(1.2)
         self.after(0, lambda: self.status_var.set("Scan finished"))
+
+
 if __name__ == "__main__":
     app = FaxSpotterApp()
     app.mainloop()
